@@ -1,0 +1,22 @@
+create table if not exists products (
+	product_key integer not null unique, 
+	product_subcategory_key integer, 
+	product_name varchar(40), 
+	standard_cost decimal(6, 2), 
+	color varchar(12), 
+	safety_stock_level integer, 
+	list_price decimal(6,2), 
+	size varchar(2), 
+	size_range varchar(8), 
+	weight decimal(6,2), 
+	days_to_manufacture integer, 
+	product_line char(1), 
+	dealer_price decimal(6,2), 
+	class char(1), 
+	model_name varchar(30), 
+	description text, 
+	start_date date, 
+	end_date date,
+	primary key (product_key),
+	foreign key (product_subcategory_key) references product_sub_category(product_subcategory_key)
+)
