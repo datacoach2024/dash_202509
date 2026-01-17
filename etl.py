@@ -1,13 +1,8 @@
 import json
-import logging
-import time
 import pandas as pd
-from pathlib import Path
-from sqlalchemy import text
+import duckdb
 
-from db import set_connection
-
-SCHEMA = 'adv_works'
+DB = 'my.db'
 SOURCE = 'source/adventure_works.xlsx'
 
 # важно сохранять порядок листов так как сначала идут таблицы без внешних ключей
@@ -19,6 +14,14 @@ with open('dicts/columns.json') as f:
 
 
 def make_snake_case(camel_cased_word: str) -> str:
+    """
+    Преобразовывает текст в snake_case
+    
+    Принимает:
+    * camel_cased_word: текстовая строка в формате camel_case
+    Возвращает:
+    * snake_case_word: текстовую строку в формате snake_case
+    """
     snake_cased_word = ''
     for ix, sym in enumerate(camel_cased_word):
         if sym.isupper() and ix != 0:
@@ -47,46 +50,35 @@ def read_data(sheet_name: str) -> pd.DataFrame:
     return df
 
 
-def load_data(df: pd.DataFrame, table_name: str) -> None:
-    print(f"{table_name}: {df.shape}")
-    with set_connection() as pg:
-        print(f"loading data to {table_name}...")
-        df.to_sql(
-            schema=SCHEMA,
-            name=table_name,
-            con=pg,
-            index=False,
-            if_exists='append'
-        )
-
-
-def create_schema() -> None:
-    with set_connection() as pg:
-        print(f"creating schema...")
-        pg.execute(text(f"create schema if not exists {SCHEMA}"))
-        pg.commit()
-
-
 def create_table(table_name: str) -> None:
     ddl_file = f"ddl/{table_name}_ddl.sql"
 
     with open(ddl_file) as f:
-        ddl_query = text(f.read().format(schema=SCHEMA))
+        ddl_query = f.read()
 
-    with set_connection() as pg:
+    with duckdb.connect(DB) as duck:
         print(f"creating table {table_name}...")
-        pg.execute(ddl_query)
-        pg.commit()
+        duck.execute(ddl_query)
+        duck.commit()
 
-    with set_connection() as pg:
-        pg.execute(text(f"truncate table {SCHEMA}.{table_name} restart identity cascade"))
-        pg.commit()
+    with duckdb.connect(DB) as duck:
+        duck.execute(f"truncate table {table_name}")
+        duck.commit()
+
+
+def load_data(df: pd.DataFrame, table_name: str) -> None:
+    print(f"{table_name}: {df.shape}")
+    with duckdb.connect(DB) as duck:
+        print(f"loading data to {table_name}...")
+        duck.execute(f"""
+            insert into {table_name}
+            select *
+            from df
+        """)
 
 
 def pipeline() -> None:
     
-    create_schema()
-
     for sheet_name in SHEETS:
         df = read_data(sheet_name)
         
@@ -95,3 +87,4 @@ def pipeline() -> None:
 
         create_table(table_name)
         load_data(df[usecols], table_name)
+

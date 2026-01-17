@@ -1,0 +1,18 @@
+{
+   "customers": ["customer_key", "name", "birth_date", "marital_status",
+       "gender", "yearly_income", "number_children_at_home", "occupation",
+       "house_owner_flag", "number_cars_owned", "phone", "date_first_purchase"],
+   "products": ["product_key", "product_subcategory_key", "product_name",
+       "standard_cost", "color", "safety_stock_level", "list_price", "size",
+       "size_range", "weight", "days_to_manufacture", "product_line",
+       "dealer_price", "class", "model_name", "description", "start_date",
+       "end_date"],
+   "product_sub_category": ["product_subcategory_key", "english_product_subcategory_name", 
+      "product_category_key"],
+   "product_category": ["product_category_key", "english_product_category_name"],
+   "territory": ["territory_key", "region", "country", "continent"],
+   "sales": ["product_key", "order_date", "customer_key", "sales_territory_key",
+                "sales_order_number", "sales_order_line_number", "order_quantity",
+                "unit_price", "extended_amount", "product_standard_cost", "total_product_cost",
+                "sales_amount", "tax_amt", "freight"]
+}
